@@ -1,212 +1,11 @@
-// // package main
-
-// // import (
-// // 	"fmt"
-// // 	"log"
-
-// // 	"github.com/skip2/go-qrcode"
-// // )
-
-// // func main() {
-// // 	// Text or URL to encode in the QR code
-// // 	data := "https://example.com"
-
-// // 	// Generate the QR code and save it to a PNG file
-// // 	err := qrcode.WriteFile(data, qrcode.Medium, 256, "qrcode.png")
-// // 	if err != nil {
-// // 		log.Fatal(err)
-// // 	}
-
-// // 	fmt.Println("QR code generated and saved as qrcode.png")
-// // }
-
-// package main
-
-// import (
-// 	"encoding/json"
-// 	"log"
-// 	"net/http"
-// 	"sync"
-
-// 	"github.com/fjl/go-couchdb"
-// )
-
-// var mutex sync.Mutex
-
-// // CRUD operations for students
-
-// // Create a new student
-// func createStudent(w http.ResponseWriter, r *http.Request, client *couchdb.Client) {
-// 	var student struct {
-// 		ID     string `json:"id"`
-// 		Name   string `json:"name"`
-// 		Email  string `json:"email"`
-// 		Age    int    `json:"age"`
-// 		Gender string `json:"gender"`
-// 	}
-
-// 	if err := json.NewDecoder(r.Body).Decode(&student); err != nil {
-// 		http.Error(w, "invalid request payload", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	var existingDoc map[string]interface{}
-// 	err := client.DB("student_db").Get(student.ID, &existingDoc, couchdb.Options{})
-// 	if err == nil {
-// 		http.Error(w, "Student ID already exists", http.StatusConflict)
-// 		return
-// 	}
-
-// 	doc := map[string]interface{}{
-// 		"_id":    student.ID,
-// 		"name":   student.Name,
-// 		"email":  student.Email,
-// 		"age":    student.Age,
-// 		"gender": student.Gender,
-// 	}
-
-// 	_, err = client.DB("student_db").Put(student.ID, doc, "")
-// 	if err != nil {
-// 		http.Error(w, "failed to create student", http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	w.WriteHeader(http.StatusOK)
-// 	json.NewEncoder(w).Encode(map[string]string{"message": "Student created successfully"})
-// }
-
-// // Retrieve a student by ID
-// func getStudent(w http.ResponseWriter, r *http.Request, client *couchdb.Client) {
-// 	studentID := r.URL.Query().Get("id")
-// 	if studentID == "" {
-// 		http.Error(w, "Student ID missing", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	var student map[string]interface{}
-// 	err := client.DB("student_db").Get(studentID, &student, couchdb.Options{})
-// 	if err != nil {
-// 		http.Error(w, "Student not found", http.StatusNotFound)
-// 		return
-// 	}
-
-// 	w.WriteHeader(http.StatusOK)
-// 	json.NewEncoder(w).Encode(student)
-// }
-
-// // Update student data
-// func updateStudent(w http.ResponseWriter, r *http.Request, client *couchdb.Client) {
-// 	var student struct {
-// 		ID     string `json:"id"`
-// 		Name   string `json:"name"`
-// 		Email  string `json:"email"`
-// 		Age    int    `json:"age"`
-// 		Gender string `json:"gender"`
-// 	}
-
-// 	if err := json.NewDecoder(r.Body).Decode(&student); err != nil {
-// 		http.Error(w, "invalid request payload", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	var existingDoc map[string]interface{}
-// 	err := client.DB("student_db").Get(student.ID, &existingDoc, couchdb.Options{})
-// 	if err != nil {
-// 		http.Error(w, "Student not found", http.StatusNotFound)
-// 		return
-// 	}
-
-// 	doc := map[string]interface{}{
-// 		"_id":    student.ID,
-// 		"_rev":   existingDoc["_rev"],
-// 		"name":   student.Name,
-// 		"email":  student.Email,
-// 		"age":    student.Age,
-// 		"gender": student.Gender,
-// 	}
-
-// 	_, err = client.DB("student_db").Put(student.ID, doc, existingDoc["_rev"].(string))
-// 	if err != nil {
-// 		http.Error(w, "failed to update student", http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	w.WriteHeader(http.StatusOK)
-// 	json.NewEncoder(w).Encode(map[string]string{"message": "Student updated successfully"})
-// }
-
-// // Delete student by ID
-// func deleteStudent(w http.ResponseWriter, r *http.Request, client *couchdb.Client) {
-// 	studentID := r.URL.Query().Get("id")
-// 	if studentID == "" {
-// 		http.Error(w, "Student ID missing", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	var existingDoc map[string]interface{}
-// 	err := client.DB("student_db").Get(studentID, &existingDoc, couchdb.Options{})
-// 	if err != nil {
-// 		http.Error(w, "Student not found", http.StatusNotFound)
-// 		return
-// 	}
-
-// 	_, err = client.DB("student_db").Delete(studentID, existingDoc["_rev"].(string))
-// 	if err != nil {
-// 		http.Error(w, "failed to delete student", http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	w.WriteHeader(http.StatusOK)
-// 	json.NewEncoder(w).Encode(map[string]string{"message": "Student deleted successfully"})
-// }
-
-// // CouchDB connection function
-// func initCouchDB() (*couchdb.Client, error) {
-// 	client, err := couchdb.NewClient("http://admin:admin@localhost:5984/", nil)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return client, nil
-// }
-
-// func main() {
-// 	client, err := initCouchDB()
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	http.HandleFunc("/create-student", func(w http.ResponseWriter, r *http.Request) {
-// 		createStudent(w, r, client)
-// 	})
-
-// 	http.HandleFunc("/get-student", func(w http.ResponseWriter, r *http.Request) {
-// 		getStudent(w, r, client)
-// 	})
-
-// 	http.HandleFunc("/update-student", func(w http.ResponseWriter, r *http.Request) {
-// 		updateStudent(w, r, client)
-// 	})
-
-// 	http.HandleFunc("/delete-student", func(w http.ResponseWriter, r *http.Request) {
-// 		deleteStudent(w, r, client)
-// 	})
-
-// 	log.Println("Server started at :8081")
-// 	log.Fatal(http.ListenAndServe(":8081", nil))
-// }
-
-// //this code is working perfectly fine
-
-package main
+package student
 
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/fjl/go-couchdb"
@@ -296,7 +95,7 @@ type Scholarship struct {
 
 // CRUD operations for students
 
-func createStudent(w http.ResponseWriter, r *http.Request, client *couchdb.Client) {
+func CreateStudent(w http.ResponseWriter, r *http.Request, client *couchdb.Client) {
 	var student Student
 
 	// Debug: Log the incoming request body
@@ -364,61 +163,7 @@ func createStudent(w http.ResponseWriter, r *http.Request, client *couchdb.Clien
 	json.NewEncoder(w).Encode(map[string]string{"message": "Student created successfully"})
 }
 
-// Create a new student
-// func createStudent(w http.ResponseWriter, r *http.Request, client *couchdb.Client) {
-// 	var student Student
-
-// 	log.Println("Received request to create student", r.Body)
-
-// 	if err := json.NewDecoder(r.Body).Decode(&student); err != nil {
-// 		http.Error(w, "invalid request payload", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	log.Printf("Decoded student: %+v", student)
-
-// 	var existingDoc map[string]interface{}
-// 	err := client.DB("student_db").Get(student.ID, &existingDoc, couchdb.Options{})
-// 	if err == nil {
-// 		http.Error(w, "Student ID already exists", http.StatusConflict)
-// 		return
-// 	}
-
-// 	doc := map[string]interface{}{
-// 		"_id":                        student.ID,
-// 		"full_name":                  student.FullName,
-// 		"date_of_birth":              student.DateOfBirth.Format("2006-01-02"), // Format date for CouchDB
-// 		"gender":                     student.Gender,
-// 		"address":                    student.Address,
-// 		"contact_number":             student.ContactNumber,
-// 		"email_address":              student.EmailAddress,
-// 		"emergency_contact":          student.EmergencyContact,
-// 		"class":                      student.Class,
-// 		"section":                    student.Section,
-// 		"roll_number":                student.RollNumber,
-// 		"subjects_enrolled":          student.SubjectsEnrolled,
-// 		"attendance_records":         student.AttendanceRecords,
-// 		"exam_scores":                student.ExamScores,
-// 		"extracurricular_activities": student.ExtracurricularActivities,
-// 		"behavioral_records":         student.BehavioralRecords,
-// 		"health_records":             student.HealthRecords,
-// 		"admission_date":             student.AdmissionDate.Format("2006-01-02"), // Format date for CouchDB
-// 		"previous_school":            student.PreviousSchool,
-// 		"fee_payment_records":        student.FeePaymentRecords,
-// 		"scholarships":               student.Scholarships,
-// 	}
-
-// 	_, err = client.DB("student_db").Put(student.ID, doc, "")
-// 	if err != nil {
-// 		http.Error(w, "failed to create student", http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	w.WriteHeader(http.StatusOK)
-// 	json.NewEncoder(w).Encode(map[string]string{"message": "Student created successfully"})
-// }
-
-func generateAndSaveQRCode(w http.ResponseWriter, r *http.Request, client *couchdb.Client) {
+func GenerateAndSaveQRCode(w http.ResponseWriter, r *http.Request, client *couchdb.Client) {
 	studentID := r.URL.Query().Get("id")
 	if studentID == "" {
 		http.Error(w, "Student ID missing", http.StatusBadRequest)
@@ -449,21 +194,15 @@ func generateAndSaveQRCode(w http.ResponseWriter, r *http.Request, client *couch
 		return
 	}
 
-	// Generate the QR code based on the student details
-	qrCodeFile := fmt.Sprintf("%s_qrcode.png", studentID)
-	err = qrcode.WriteFile(string(qrData), qrcode.Medium, 256, qrCodeFile)
+	// Generate the QR code in memory
+	qrCode, err := qrcode.Encode(string(qrData), qrcode.Medium, 256)
 	if err != nil {
 		http.Error(w, "Failed to generate QR code", http.StatusInternalServerError)
 		return
 	}
 
 	// Convert the QR code image to Base64
-	file, err := os.ReadFile(qrCodeFile)
-	if err != nil {
-		http.Error(w, "Failed to read QR code file", http.StatusInternalServerError)
-		return
-	}
-	qrCodeBase64 := base64.StdEncoding.EncodeToString(file)
+	qrCodeBase64 := base64.StdEncoding.EncodeToString(qrCode)
 
 	// Add the Base64 QR code to the student document
 	student["qr_code"] = qrCodeBase64
@@ -483,14 +222,15 @@ func generateAndSaveQRCode(w http.ResponseWriter, r *http.Request, client *couch
 }
 
 // Retrieve a student by ID
-func getStudent(w http.ResponseWriter, r *http.Request, client *couchdb.Client) {
+func GetStudent(w http.ResponseWriter, r *http.Request, client *couchdb.Client) {
 	studentID := r.URL.Query().Get("id")
 	if studentID == "" {
 		http.Error(w, "Student ID missing", http.StatusBadRequest)
 		return
 	}
 
-	var student Student
+	// var student Student
+	var student map[string]interface{}
 	err := client.DB("student_db").Get(studentID, &student, couchdb.Options{})
 	if err != nil {
 		http.Error(w, "Student not found", http.StatusNotFound)
@@ -501,9 +241,45 @@ func getStudent(w http.ResponseWriter, r *http.Request, client *couchdb.Client) 
 	json.NewEncoder(w).Encode(student)
 }
 
-// Update student data
-// Update student data (continued)
-func updateStudent(w http.ResponseWriter, r *http.Request, client *couchdb.Client) {
+func GetAllStudents(w http.ResponseWriter, r *http.Request, client *couchdb.Client) {
+	// Define a struct for the result of AllDocs
+	type AllDocsResult struct {
+		Rows []struct {
+			ID  string          `json:"id"`
+			Doc json.RawMessage `json:"doc"`
+		} `json:"rows"`
+	}
+
+	var result AllDocsResult
+
+	// Fetch all documents (students) from the "student_db"
+	err := client.DB("student_db").AllDocs(&result, couchdb.Options{
+		"include_docs": true, // Include full documents, not just IDs
+	})
+	if err != nil {
+		http.Error(w, "Failed to fetch students", http.StatusInternalServerError)
+		return
+	}
+
+	// Prepare a slice to store the student details
+	var students []map[string]interface{}
+
+	// Iterate over the rows and append the student details to the slice
+	for _, row := range result.Rows {
+		var student map[string]interface{}
+		if err := json.Unmarshal(row.Doc, &student); err == nil {
+			// Exclude the _rev field if necessary
+			delete(student, "_rev")
+			students = append(students, student)
+		}
+	}
+
+	// Respond with the list of students
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(students)
+}
+
+func UpdateStudent(w http.ResponseWriter, r *http.Request, client *couchdb.Client) {
 	var student Student
 
 	if err := json.NewDecoder(r.Body).Decode(&student); err != nil {
@@ -554,7 +330,7 @@ func updateStudent(w http.ResponseWriter, r *http.Request, client *couchdb.Clien
 }
 
 // Delete student by ID
-func deleteStudent(w http.ResponseWriter, r *http.Request, client *couchdb.Client) {
+func DeleteStudent(w http.ResponseWriter, r *http.Request, client *couchdb.Client) {
 	studentID := r.URL.Query().Get("id")
 	if studentID == "" {
 		http.Error(w, "Student ID missing", http.StatusBadRequest)
@@ -576,43 +352,4 @@ func deleteStudent(w http.ResponseWriter, r *http.Request, client *couchdb.Clien
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Student deleted successfully"})
-}
-
-// CouchDB connection function
-func initCouchDB() (*couchdb.Client, error) {
-	client, err := couchdb.NewClient("http://admin:admin@localhost:5984/", nil)
-	if err != nil {
-		return nil, err
-	}
-	return client, nil
-}
-
-func main() {
-	client, err := initCouchDB()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	http.HandleFunc("/create-student", func(w http.ResponseWriter, r *http.Request) {
-		createStudent(w, r, client)
-	})
-
-	http.HandleFunc("/get-student", func(w http.ResponseWriter, r *http.Request) {
-		getStudent(w, r, client)
-	})
-
-	http.HandleFunc("/update-student", func(w http.ResponseWriter, r *http.Request) {
-		updateStudent(w, r, client)
-	})
-
-	http.HandleFunc("/delete-student", func(w http.ResponseWriter, r *http.Request) {
-		deleteStudent(w, r, client)
-	})
-
-	http.HandleFunc("/generate-qrcode", func(w http.ResponseWriter, r *http.Request) {
-		generateAndSaveQRCode(w, r, client)
-	})
-
-	log.Println("Server started at :8081")
-	log.Fatal(http.ListenAndServe(":8081", nil))
 }
