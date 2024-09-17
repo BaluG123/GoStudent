@@ -2,6 +2,7 @@ package main
 
 import (
 	"data-access/student"
+	"data-access/teacher"
 	"log"
 	"net/http"
 
@@ -74,7 +75,7 @@ func requestOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	otp := generateOTP()
-	expiry := time.Now().Add(10 * time.Minute)
+	expiry := time.Now().Add(100 * time.Minute)
 
 	mutex.Lock()
 	otpStore[request.Email] = OTP{Code: otp, Expiry: expiry}
@@ -244,29 +245,112 @@ func main() {
 	}
 
 	// Setup HTTP routes
+	// http.HandleFunc("/students", func(w http.ResponseWriter, r *http.Request) {
+	// 	switch r.Method {
+	// 	case http.MethodPost:
+	// 		student.CreateStudent(w, r, client) // Call the CreateStudent function
+	// 	case http.MethodGet:
+	// 		student.GetAllStudents(w, r, client) // Call GetAllStudents to retrieve all students
+	// 	}
+	// })
+
+	// http.HandleFunc("/students/get", func(w http.ResponseWriter, r *http.Request) {
+	// 	student.GetStudent(w, r, client) // Retrieve student by ID
+	// })
+
+	http.HandleFunc("/teachers", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			teacher.CreateTeacher(w, r, client) // Call the CreateStudent function
+		case http.MethodGet:
+			// Secure the GetAllStudents endpoint with JWT verification
+			verifyJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				teacher.GetAllTeachers(w, r, client) // Pass the client to GetAllStudents
+			})).ServeHTTP(w, r)
+		}
+	})
+
+	http.HandleFunc("/teachers/get", func(w http.ResponseWriter, r *http.Request) {
+		// Secure the GetStudent endpoint with JWT verification
+		verifyJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			teacher.GetTeacher(w, r, client) // Pass the client to GetStudent
+		})).ServeHTTP(w, r)
+	})
+
+	http.HandleFunc("/teachers/create", func(w http.ResponseWriter, r *http.Request) {
+		// Secure the CreateStudent endpoint with JWT verification
+		verifyJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			teacher.CreateTeacher(w, r, client) // Call CreateStudent function
+		})).ServeHTTP(w, r)
+	})
+
+	http.HandleFunc("/teachers/update", func(w http.ResponseWriter, r *http.Request) {
+		// Secure the UpdateStudent endpoint with JWT verification
+		verifyJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			teacher.UpdateTeacher(w, r, client) // Call UpdateStudent function
+		})).ServeHTTP(w, r)
+	})
+
+	http.HandleFunc("/teachers/delete", func(w http.ResponseWriter, r *http.Request) {
+		// Secure the DeleteStudent endpoint with JWT verification
+		verifyJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			teacher.DeleteTeacher(w, r, client) // Call DeleteStudent function
+		})).ServeHTTP(w, r)
+	})
+
 	http.HandleFunc("/students", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
 			student.CreateStudent(w, r, client) // Call the CreateStudent function
 		case http.MethodGet:
-			student.GetAllStudents(w, r, client) // Call GetAllStudents to retrieve all students
+			// Secure the GetAllStudents endpoint with JWT verification
+			verifyJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				student.GetAllStudents(w, r, client) // Pass the client to GetAllStudents
+			})).ServeHTTP(w, r)
 		}
 	})
 
 	http.HandleFunc("/students/get", func(w http.ResponseWriter, r *http.Request) {
-		student.GetStudent(w, r, client) // Retrieve student by ID
+		// Secure the GetStudent endpoint with JWT verification
+		verifyJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			student.GetStudent(w, r, client) // Pass the client to GetStudent
+		})).ServeHTTP(w, r)
 	})
+	// http.HandleFunc("/students/create", func(w http.ResponseWriter, r *http.Request) {
+	// 	student.CreateStudent(w, r, client) // Retrieve student by ID
+	// })
+
+	// http.HandleFunc("/students/update", func(w http.ResponseWriter, r *http.Request) {
+	// 	student.UpdateStudent(w, r, client) // Update student by ID
+	// })
+
+	// http.HandleFunc("/students/delete", func(w http.ResponseWriter, r *http.Request) {
+	// 	student.DeleteStudent(w, r, client) // Delete student by ID
+	// })
 
 	http.HandleFunc("/students/create", func(w http.ResponseWriter, r *http.Request) {
-		student.CreateStudent(w, r, client) // Retrieve student by ID
+		// Secure the CreateStudent endpoint with JWT verification
+		verifyJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			student.CreateStudent(w, r, client) // Call CreateStudent function
+		})).ServeHTTP(w, r)
 	})
 
 	http.HandleFunc("/students/update", func(w http.ResponseWriter, r *http.Request) {
-		student.UpdateStudent(w, r, client) // Update student by ID
+		// Secure the UpdateStudent endpoint with JWT verification
+		verifyJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			student.UpdateStudent(w, r, client) // Call UpdateStudent function
+		})).ServeHTTP(w, r)
 	})
 
 	http.HandleFunc("/students/delete", func(w http.ResponseWriter, r *http.Request) {
-		student.DeleteStudent(w, r, client) // Delete student by ID
+		// Secure the DeleteStudent endpoint with JWT verification
+		verifyJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			student.DeleteStudent(w, r, client) // Call DeleteStudent function
+		})).ServeHTTP(w, r)
+	})
+
+	http.HandleFunc("/teachers/generate_qr", func(w http.ResponseWriter, r *http.Request) {
+		teacher.GenerateAndSaveQRCode(w, r, client) // Generate QR code for a student
 	})
 
 	http.HandleFunc("/students/generate_qr", func(w http.ResponseWriter, r *http.Request) {
