@@ -1,6 +1,7 @@
 package main
 
 import (
+	"data-access/staff"
 	"data-access/student"
 	"data-access/teacher"
 	"log"
@@ -355,6 +356,54 @@ func main() {
 
 	http.HandleFunc("/students/generate_qr", func(w http.ResponseWriter, r *http.Request) {
 		student.GenerateAndSaveQRCode(w, r, client) // Generate QR code for a student
+	})
+
+	http.HandleFunc("/staff/create", func(w http.ResponseWriter, r *http.Request) {
+		// Secure the CreateStaff endpoint with JWT verification
+		verifyJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			staff.CreateStaff(w, r, client) // Call CreateStaff function
+		})).ServeHTTP(w, r)
+	})
+
+	http.HandleFunc("/staff/update", func(w http.ResponseWriter, r *http.Request) {
+		// Secure the UpdateStaff endpoint with JWT verification
+		verifyJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			staff.UpdateStaff(w, r, client) // Call UpdateStaff function
+		})).ServeHTTP(w, r)
+	})
+
+	http.HandleFunc("/staff/delete", func(w http.ResponseWriter, r *http.Request) {
+		// Secure the DeleteStaff endpoint with JWT verification
+		verifyJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			staff.DeleteStaff(w, r, client) // Call DeleteStaff function
+		})).ServeHTTP(w, r)
+	})
+
+	http.HandleFunc("/staff", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			staff.CreateStaff(w, r, client) // Call the CreateStaff function
+		case http.MethodGet:
+			// Secure the GetAllStaff endpoint with JWT verification
+			verifyJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				staff.GetAllStaff(w, r, client) // Pass the client to GetAllStaff
+			})).ServeHTTP(w, r)
+		}
+	})
+
+	http.HandleFunc("/staff/get", func(w http.ResponseWriter, r *http.Request) {
+		// Secure the GetStaff endpoint with JWT verification
+		verifyJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			staff.GetStaff(w, r, client) // Pass the client to GetStaff
+		})).ServeHTTP(w, r)
+	})
+
+	// Endpoint for generating QR code for staff
+	http.HandleFunc("/staff/generate-qrcode", func(w http.ResponseWriter, r *http.Request) {
+		// Secure the endpoint with JWT verification
+		verifyJWT(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			staff.GenerateAndSaveStaffQRCode(w, r, client)
+		})).ServeHTTP(w, r)
 	})
 
 	http.HandleFunc("/request-otp", requestOTP)
